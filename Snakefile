@@ -280,8 +280,6 @@ rule spacegraphcats_build:
 rule spacegraphcats_multifasta_query:
     input:
         reads =  "outputs/abundtrim/{sample}.abundtrim.fq.gz",
-        ref_genes = "inputs/sgc_multifasta_query_hgt_db.fasta", 
-        ref_sig = "inputs/sgc_multifasta_query_hgt_db.sig",
         conf = "outputs/sgc_conf/{sample}_r10_multifasta_conf.yml",
         catlas = "outputs/sgc/{sample}_k31_r10/catlas.csv"
     output: 
