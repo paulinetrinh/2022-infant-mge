@@ -135,8 +135,8 @@ rule sketch_query_sequences:
 
 rule fastp:
     input:
-        R1="inputs/raw_seqs/{sample}_1.fastq.gz",
-        R2="inputs/raw_seqs/{sample}_2.fastq.gz"
+        R1="inputs/raw_seqs/{sample}_R1.fastq.gz",
+        R2="inputs/raw_seqs/{sample}_R2.fastq.gz"
     output:
         R1="outputs/fastp/{sample}_R1.trim.fq.gz",
         R2="outputs/fastp/{sample}_R2.trim.fq.gz",
