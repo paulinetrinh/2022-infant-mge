@@ -2,8 +2,10 @@ import pandas as pd
 import csv
 import os
 
-m = pd.read_csv("inputs/filereport_read_run_SRR3726337.tsv", header = 0, sep = "\t")
-SAMPLES = m['run_accession'].unique().tolist()
+SAMPLES = ['HDW-C02-S104', 'HDW-C02-S106', 'HDW-C02-S111', 'HDW-C02-S112',
+           'HDW-C02-S113', 'HDW-C02-S115', 'HDW-D03-S25', 'HDW-D03-S26',
+           'HDW-D03-S27', 'HDW-D03-S28', 'HDW-D03-S31', 'HDW-D03-S32', 
+           'HDW-D03-S33', 'HDW-D03-S34', 'HDW-D03-S35', 'HDW-D03-S37']
 
 class Checkpoint_GatherResults:
     """Given a pattern containing {ident} and {sample}, this class
@@ -70,26 +72,6 @@ rule all:
 ## Download reads and databases for workflow
 ###################################################################
 
-rule download_metagenome_reads:
-    output: 
-        r1="inputs/raw_reads/{sample}_1.fastq.gz",
-        r2="inputs/raw_reads/{sample}_2.fastq.gz"
-    threads: 1
-    resources: 
-        mem_mb = 800,
-        time_min = 600
-    run:
-        row = m.loc[m['run_accession'] == wildcards.sample]
-        fastqs = row['fastq_ftp'].values[0]
-        fastqs = fastqs.split(";")
-        fastq_1 = fastqs[0]
-        fastq_2 = fastqs[1]
-        if not os.path.exists(output.r1):
-            shell("wget -O {output.r1} ftp://{fastq_1}")
-        if not os.path.exists(output.r2):
-            shell("wget -O {output.r2} ftp://{fastq_2}")
-
-
 rule download_sourmash_db_for_taxonomy:
     output: "inputs/gtdb-rs207.genomic-reps.dna.k31.zip"
     threads: 1
@@ -120,28 +102,6 @@ rule download_CARD_db_for_annotation:
     wget -O {output} https://card.mcmaster.ca/download/0/broadstreet-v3.2.2.tar.bz2
     '''
 
-rule download_viral_db_for_annotation:
-    output: "inputs/CHVD_virus_sequences_v1.1.tar.gz"
-    threads: 1
-    resources: 
-        mem_mb = 800,
-        time_min = 15
-    shell:'''
-    wget -O {output} https://zenodo.org/record/4498884/files/CHVD_virus_sequences_v1.1.tar.gz?download=1
-    '''
-
-rule decompress_viral_db_for_annotation:
-    input: "inputs/CHVD_virus_sequences_v1.1.tar.gz"
-    output: "inputs/CHVD_virus_sequences_v1.1.fasta"
-    params: outdir = "inputs"
-    threads: 1
-    resources: 
-        mem_mb = 800,
-        time_min = 2
-    shell:'''
-    tar xf {input} -C {params.outdir}
-    '''
-
 rule decompress_card_db_for_annotation:
     input: "inputs/broardstreet-v3.2.2.tar.bz2"
     output: "inputs/card_db/nucleotide_fasta_protein_homolog_model.fasta"
@@ -154,22 +114,9 @@ rule decompress_card_db_for_annotation:
     tar xf {input} -C {params.outdir}
     '''
 
-rule combine_query_sequences_into_single_fasta:
-    input: 
-        "inputs/card_db/nucleotide_fasta_protein_homolog_model.fasta",
-        "inputs/CHVD_virus_sequences_v1.1.fasta"
-    output: "inputs/sgc_multifasta_query_hgt_db.fasta"
-    threads: 1
-    resources: 
-        mem_mb = 800,
-        time_min = 2
-    shell:'''
-    cat {input} > {output}
-    '''
-
 rule sketch_query_sequences:
-    input: "inputs/sgc_multifasta_query_hgt_db.fasta"
-    output:"inputs/sgc_multifasta_query_hgt_db.sig"
+    input: "inputs/card_db/nucleotide_fasta_protein_homolog_model.fasta"
+    output:"inputs/card_db/nucleotide_fasta_protein_homolog_model.sig"
     conda: "envs/sourmash.yml"
     threads: 1
     resources: 
@@ -188,8 +135,8 @@ rule sketch_query_sequences:
 
 rule fastp:
     input:
-        R1="inputs/raw_reads/{sample}_1.fastq.gz",
-        R2="inputs/raw_reads/{sample}_2.fastq.gz"
+        R1="inputs/raw_seqs/{sample}_1.fastq.gz",
+        R2="inputs/raw_seqs/{sample}_2.fastq.gz"
     output:
         R1="outputs/fastp/{sample}_R1.trim.fq.gz",
         R2="outputs/fastp/{sample}_R2.trim.fq.gz",
@@ -287,8 +234,8 @@ checkpoint sourmash_gather_mgx:
 rule make_sgc_multifasta_conf_files:
     input:
         reads =  "outputs/abundtrim/{sample}.abundtrim.fq.gz",
-        ref_genes = "inputs/sgc_multifasta_query_hgt_db.fasta",
-        ref_sig = "inputs/sgc_multifasta_query_hgt_db.sig"
+        ref_genes = "inputs/card_db/nucleotide_fasta_protein_homolog_model.fasta",
+        ref_sig = "inputs/card_db/nucleotide_fasta_protein_homolog_model.sig"
     output:
         conf = "outputs/sgc_conf/{sample}_r10_multifasta_conf.yml"
     resources:
@@ -352,63 +299,36 @@ rule spacegraphcats_multifasta_query:
     python -m spacegraphcats run {input.conf} multifasta_query --nolock --outdir {params.outdir} --rerun-incomplete
     '''
 
+# TODO: need to replace conf files with files of interest
+#       this also will conflict with the prior rule if we want to use the same catlas...
+#       so maybe run the pipeline, move the files, and then run this again?
+#       not ideal...will think on it.
+#rule spacegraphcats_multifasta_query_specific:
+#    input:
+#        reads =  "outputs/abundtrim/{sample}.abundtrim.fq.gz",
+#        ref_genes = "inputs/sgc_multifasta_query_hgt_db.fasta", 
+#        ref_sig = "inputs/sgc_multifasta_query_hgt_db.sig",
+#        conf = "outputs/sgc_conf/{sample}_r10_multifasta_conf.yml",
+#        catlas = "outputs/sgc/{sample}_k31_r10/catlas.csv"
+#    output: 
+#        "outputs/sgc/{sample}_k31_r10_multifasta/multifasta.cdbg_annot.csv",
+#        "outputs/sgc/{sample}_k31_r10_multifasta/multifasta.cdbg_by_record.csv"
+#    params: 
+#        outdir = "outputs/sgc",
+#    conda: "envs/spacegraphcats.yml"
+#    benchmark: "benchmarks/spacegraphcats_multifasta_query_k31_r10_{sample}.tsv"
+#    resources:
+#        mem_mb = 32000,
+#        time_min = 920
+#    threads: 1
+#    shell:'''
+#    python -m spacegraphcats run {input.conf} multifasta_query --nolock --outdir {params.outdir} --rerun-incomplete
+#    '''
+ 
 #################################################################
 ## extract and visualize candidate MGEs
 #################################################################
 
-rule grab_names_of_candidate_prevalent_mges:
-    input: cdbg_by_record = "outputs/sgc/{sample}_k31_r10_multifasta/multifasta.cdbg_by_record.csv"
-    output: candidate_mges =  "outputs/candidate_mges/{sample}_candidate_mge_names.txt"
-    conda: "envs/tidyverse.yml"
-    resources: 
-        mem_mb = 4000,
-        time_min = 20
-    threads: 1
-    script: "scripts/snakemake_grab_names_of_candidate_prevalent_mges.R"
-
-rule extract_candidate_mges_from_fasta:
-    input: 
-        candidate_mges =  "outputs/candidate_mges/{sample}_candidate_mge_names.txt",
-        fasta = "inputs/sgc_multifasta_query_hgt_db.fasta"
-    output: "outputs/candidate_mges/{sample}_candidate_mges.fasta"
-    conda: "envs/seqtk.yml"
-    resources: 
-        mem_mb = 4000,
-        time_min = 20
-    threads: 1
-    shell:'''
-    seqtk subseq {input.fasta} {input.candidate_mges} > {output}
-    '''
-
-checkpoint separate_candidate_mges_into_single_fastas:
-    """
-    Note will expand over samples here, making queries for all discovered MGEs across all samples if there are multiple
-    """
-    input: expand("outputs/candidate_mges/{sample}_candidate_mges.fasta", sample = SAMPLES)
-    output: directory("outputs/candidate_mge_sequences")    
-    resources: 
-        mem_mb = 4000,
-        time_min = 20
-    threads: 1
-    shell:"""
-    # This should probably directly encode write folder in awk instead of having an mv command at the end
-    # also not the best form to rename things with sed...probably should replace this whole rule with python something or another
-    mkdir -p outputs/candidate_mge_sequences
-    cat {input} | awk '{{
-        if (substr($0, 1, 1)==">") {{filename=(substr($0,2) ".fa")}}
-        print $0 > filename
-    }}'
-    for file in *fa; do mv "$file" $(echo "$file" | sed -e 's/[^A-Za-z0-9._-]/_/g'); done
-    mv *.fa outputs/candidate_mge_sequences
-    """
-
-def checkpoint_separate_candidate_mges_into_single_fasta_1(wildcards):
-    # Expand checkpoint to get fasta names, which will be used as queries for spacegraphcats extract
-    # checkpoint_output encodes the output dir from the checkpoint rule.
-    checkpoint_output = checkpoints.separate_candidate_mges_into_single_fastas.get(**wildcards).output[0]
-    file_names = expand("outputs/candidate_mge_sequences/{mge}.fa",
-                        mge = glob_wildcards(os.path.join(checkpoint_output, "{mge}.fa")).mge)
-    return file_names
 
 rule make_sgc_extract_conf_files:
     input:
