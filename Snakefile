@@ -333,7 +333,7 @@ rule spacegraphcats_multifasta_query:
 rule make_sgc_extract_conf_files:
     input:
         reads =  "outputs/abundtrim/{sample}.abundtrim.fq.gz",
-        queries = checkpoint_separate_candidate_mges_into_single_fasta_1
+        #queries = checkpoint_separate_candidate_mges_into_single_fasta_1
     output:
         conf = "outputs/sgc_conf/{sample}_r10_extract_conf.yml"
     resources:
