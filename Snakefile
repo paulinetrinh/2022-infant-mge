@@ -62,9 +62,9 @@ class Checkpoint_GatherResults:
 
 rule all:
     input:  
-        expand("outputs/sourmash_gather/{sample}_k31_scaled2000_gtdb-rs207.csv", sample = SAMPLES),
+        #expand("outputs/sourmash_gather/{sample}_k31_scaled2000_gtdb-rs207.csv", sample = SAMPLES),
         expand("outputs/sgc/{sample}_k31_r10_multifasta/multifasta.cdbg_annot.csv", sample = SAMPLES),
-        expand("outputs/bandage/{sample}_done_mge.txt", sample = SAMPLES),
+        #expand("outputs/bandage/{sample}_done_mge.txt", sample = SAMPLES),
         Checkpoint_GatherResults(expand("outputs/bandage/{sample}_r10/{{acc}}_done_species.txt", sample = SAMPLES), samples = SAMPLES)
         #Checkpoint_GatherResults(expand("outputs/bandage/{sample}_r10/{{acc}}_done_species.txt", sample = SAMPLES))
 
