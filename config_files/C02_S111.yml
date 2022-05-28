@@ -1,0 +1,27 @@
+catlas_base: HDW-C02-S111
+input_sequences:
+- /home/ptrinh88/hdw-mgx/outputs/abundtrim/HDW-C02-S111.abundtrim.fq.gz
+ksize: 31
+radius: 10
+paired_reads: true
+multifasta_reference:
+- /home/ptrinh88/hdw-mgx/outputs/query_multiple/C02_S111_multi.fasta
+multifasta_scaled: 1000
+multifasta_query_sig: /home/ptrinh88/hdw-mgx/outputs/query_multiple/C02_S111.sig
+search:
+- /home/ptrinh88/hdw-mgx/outputs/query_individual/C02_S111-gene-calls.fa_genecall_113726.fa
+- /home/ptrinh88/hdw-mgx/outputs/query_individual/C02_S111-gene-calls.fa_genecall_139513.fa
+- /home/ptrinh88/hdw-mgx/outputs/query_individual/C02_S111-gene-calls.fa_genecall_148720.fa
+- /home/ptrinh88/hdw-mgx/outputs/query_individual/C02_S111-gene-calls.fa_genecall_161614.fa
+- /home/ptrinh88/hdw-mgx/outputs/query_individual/C02_S111-gene-calls.fa_genecall_185428.fa
+- /home/ptrinh88/hdw-mgx/outputs/query_individual/C02_S111-gene-calls.fa_genecall_214321.fa
+- /home/ptrinh88/hdw-mgx/outputs/query_individual/C02_S111-gene-calls.fa_genecall_220480.fa
+- /home/ptrinh88/hdw-mgx/outputs/query_individual/C02_S111-gene-calls.fa_genecall_24612.fa
+- /home/ptrinh88/hdw-mgx/outputs/query_individual/C02_S111-gene-calls.fa_genecall_33108.fa
+- /home/ptrinh88/hdw-mgx/outputs/query_individual/C02_S111-gene-calls.fa_genecall_33194.fa
+- /home/ptrinh88/hdw-mgx/outputs/query_individual/C02_S111-gene-calls.fa_genecall_33195.fa
+- /home/ptrinh88/hdw-mgx/outputs/query_individual/C02_S111-gene-calls.fa_genecall_82737.fa
+- /home/ptrinh88/hdw-mgx/outputs/query_individual/C02_S111-gene-calls.fa_genecall_82738.fa
+- /home/ptrinh88/hdw-mgx/outputs/query_individual/C02_S111-gene-calls.fa_genecall_82739.fa
+- /home/ptrinh88/hdw-mgx/outputs/query_individual/C02_S111-gene-calls.fa_genecall_82947.fa
+
